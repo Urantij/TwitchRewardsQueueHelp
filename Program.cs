@@ -103,8 +103,6 @@ class Program
             queues.Add(list);
         }
 
-        int total = queues.SelectMany(q => q).Count();
-
         int itemsBefore = 0;
         bool actuallyFound = false;
         foreach (var queue in queues)
@@ -124,20 +122,32 @@ class Program
             }
         }
 
-        if (actuallyFound)
+        string totalText;
         {
-            await chatBot.channel.SendMessageAsync($"Ваша очередь: {itemsBefore}. Всего слотов: {total}", e.id);
-        }
-        else
-        {
-            if (total > 0)
+            List<List<RewardRedemption>> nonEmptyQueues = queues.Where(q => q.Count > 0).ToList();
+
+            if (nonEmptyQueues.Count == 0)
             {
-                await chatBot.channel.SendMessageAsync($"Всего слотов: {total}", e.id);
+                totalText = "В очереди нет слотов.";
+            }
+            else if (nonEmptyQueues.Count == 1)
+            {
+                totalText = $"Всего слотов: {nonEmptyQueues.First().Count}";
             }
             else
             {
-                await chatBot.channel.SendMessageAsync("В очереди нет слотов.", e.id);
+                string queueText = string.Join("/", nonEmptyQueues.Select(q => q.Count));
+                totalText = $"Всего слотов: {queueText}";
             }
+        }
+
+        if (actuallyFound)
+        {
+            await chatBot.channel.SendMessageAsync($"Ваша очередь: {itemsBefore}. {totalText}", e.id);
+        }
+        else
+        {
+            await chatBot.channel.SendMessageAsync(totalText, e.id);
         }
     }
 }
