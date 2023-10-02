@@ -28,6 +28,10 @@ public class ChatBot
 
         client = new TwitchChatClient(true, opts, loggerFactory);
 
+        client.AuthFailed += AuthFailed;
+        client.Connected += Connected;
+        client.ConnectionClosed += ConnectionClosed;
+
         channel = client.AddAutoJoinChannel(channelName);
         channel.PrivateMessageReceived += PrivateMessageReceived;
     }
@@ -69,5 +73,20 @@ public class ChatBot
                 logger?.LogError(task.Exception, "Ошибка при выполнении делегате {trigger}", command.trigger);
             }
         });
+    }
+
+    private void AuthFailed(object? sender, EventArgs e)
+    {
+        logger?.LogCritical("Аутентификация провалилась");
+    }
+
+    private void Connected()
+    {
+        logger?.LogInformation("Подключился.");
+    }
+
+    private void ConnectionClosed(Exception? exception)
+    {
+        logger?.LogWarning("Потерял соединение {message}", exception?.Message);
     }
 }
