@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.ChannelPoints;
@@ -43,7 +43,7 @@ class Program
 
         chatBot = new(config.ChannelName, new TwitchSimpleLib.Chat.TwitchChatClientOpts(config.BotUsername, config.BotToken), loggerFactory);
         chatBot.AddCommand(new Command("ДобавитьОчередь", TimeSpan.Zero, AddQueueCommand));
-        chatBot.AddCommand(new Command("Очередь", TimeSpan.FromMinutes(2), QueueCommand));
+        chatBot.AddCommand(new Command("Очередь", config.QueueCooldown, QueueCommand));
 
         await chatBot.StartAsync();
 

@@ -26,6 +26,8 @@ public class Config
     [Required]
     public required string Refresh { get; set; }
 
+    public TimeSpan QueueCooldown { get; set; } = TimeSpan.FromMinutes(1);
+
     /// <summary>
     /// Чем ниже в списке, тем более важная очередь.
     /// </summary>
