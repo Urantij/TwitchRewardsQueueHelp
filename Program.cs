@@ -155,14 +155,14 @@ partial class Program
             }
             else
             {
-                string queueText = string.Join("/", nonEmptyQueues.Select(q => q.Count));
+                string queueText = string.Join("+", nonEmptyQueues.Select(q => q.Count));
                 totalText = $"Всего слотов: {queueText}";
             }
         }
 
         if (actuallyFound)
         {
-            await chatBot.channel.SendMessageAsync($"Ваша очередь: {itemsBefore}. {totalText}", e.id);
+            await chatBot.channel.SendMessageAsync($"Заказов перед вашим заказом: {itemsBefore}. {totalText}", e.id);
         }
         else
         {
