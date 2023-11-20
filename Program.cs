@@ -1,4 +1,5 @@
-using System.Text.Json;
+﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.ChannelPoints;
@@ -6,13 +7,16 @@ using TwitchRewardsQueueHelp.Chat;
 using TwitchSimpleLib.Chat.Messages;
 
 namespace TwitchRewardsQueueHelp;
-class Program
+
+partial class Program
 {
     const string configPath = "./config.json";
 
     static Config config = null!;
     static CoolTwitchApi capi = null!;
     static ChatBot chatBot = null!;
+
+    static readonly Regex addQueueArgsRegex = AddQueueArgsRegex();
 
     static async Task Main(string[] args)
     {
@@ -42,14 +46,14 @@ class Program
         capi = new CoolTwitchApi(config.ClientId, config.Secret, config.Refresh);
 
         chatBot = new(config.ChannelName, new TwitchSimpleLib.Chat.TwitchChatClientOpts(config.BotUsername, config.BotToken), loggerFactory);
-        chatBot.AddCommand(new Command("ДобавитьОчередь", TimeSpan.Zero, AddQueueCommand));
+        chatBot.AddCommand(new Command("Добавить", TimeSpan.Zero, AddQueueCommand));
         chatBot.AddCommand(new Command("Очередь", config.QueueCooldown, QueueCommand));
 
         await chatBot.StartAsync();
 
         while (true)
         {
-            System.Console.WriteLine(":)");
+            Console.WriteLine(":)");
             Console.ReadLine();
         }
     }
@@ -59,23 +63,38 @@ class Program
         if (e.username != "urantij" && !e.badges.ContainsKey("broadcaster"))
             return;
 
-        int counter = config.Rewards.Length + 1;
+        var match = addQueueArgsRegex.Match(e.text);
 
+        if (!match.Success)
+        {
+            await chatBot.channel.SendMessageAsync("\"Название\" Стоимость \"Описание\"", e.id);
+            return;
+        }
+
+        string title = match.Groups["title"].Value;
+        int cost = int.Parse(match.Groups["cost"].Value);
+        string description = match.Groups["description"].Value;
+
+        await AddRewardAsync(title, cost, description);
+
+        await chatBot.channel.SendMessageAsync($"Добавил", e.id);
+    }
+
+    static async Task AddRewardAsync(string title, int cost, string prompt)
+    {
         var api = await capi.GetApiAsync();
 
         var result = await api.Helix.ChannelPoints.CreateCustomRewardsAsync(config.ChannelId, new TwitchLib.Api.Helix.Models.ChannelPoints.CreateCustomReward.CreateCustomRewardsRequest()
         {
-            Title = $"Заказ x{counter}",
-            Cost = 1000 * (int)Math.Pow(10, counter),
-            IsEnabled = false,
-            Prompt = "Талончик",
+            Title = title,
+            Cost = cost,
+            IsEnabled = true,
+            Prompt = prompt,
             IsUserInputRequired = true
         });
 
         config.Rewards = config.Rewards.Append(result.Data[0].Id).ToArray();
         await config.SaveAsync(configPath);
-
-        await chatBot.channel.SendMessageAsync($"Добавил x{counter}", e.id);
     }
 
     static async Task QueueCommand(TwitchPrivateMessage e)
@@ -150,4 +169,7 @@ class Program
             await chatBot.channel.SendMessageAsync(totalText, e.id);
         }
     }
+
+    [GeneratedRegex("\"(?<title>.+?)\" (?<cost>\\d+) \"(?<description>.+?)\"$", RegexOptions.Compiled)]
+    private static partial Regex AddQueueArgsRegex();
 }
