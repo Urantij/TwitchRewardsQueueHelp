@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api;
@@ -54,7 +54,29 @@ partial class Program
         while (true)
         {
             Console.WriteLine(":)");
-            Console.ReadLine();
+            string? commandText = Console.ReadLine();
+
+            if (commandText == null)
+                continue;
+
+            if (commandText.StartsWith('+'))
+            {
+                var match = addQueueArgsRegex.Match(commandText[1..]);
+
+                if (!match.Success)
+                {
+                    System.Console.WriteLine("\"Название\" Стоимость \"Описание\"");
+                    continue;
+                }
+
+                string title = match.Groups["title"].Value;
+                int cost = int.Parse(match.Groups["cost"].Value);
+                string description = match.Groups["description"].Value;
+
+                await AddRewardAsync(title, cost, description);
+            }
+
+            System.Console.WriteLine("Добавил");
         }
     }
 
@@ -99,7 +121,7 @@ partial class Program
 
     static async Task QueueCommand(TwitchPrivateMessage e)
     {
-        // Очередь от дорогой к дешёвой
+        // Очередь от поздней к ранней
         List<List<RewardRedemption>> queues = new();
 
         var api = await capi.GetApiAsync();
