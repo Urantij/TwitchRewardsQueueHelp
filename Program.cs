@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api;
@@ -93,7 +93,7 @@ partial class Program
             IsUserInputRequired = true
         });
 
-        config.Rewards = config.Rewards.Append(result.Data[0].Id).ToArray();
+        config.Rewards = [.. config.Rewards, result.Data[0].Id];
         await config.SaveAsync(configPath);
     }
 
