@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TwitchLib.Api;
-using TwitchRewardsQueueHelp.Chat;
 using TwitchSimpleLib.Chat;
 using TwitchSimpleLib.Chat.Messages;
 
@@ -48,7 +42,7 @@ public class ChatBot
 
     private void PrivateMessageReceived(object? sender, TwitchPrivateMessage e)
     {
-        if (!e.text.StartsWith("="))
+        if (!e.text.StartsWith('='))
             return;
 
         string trigger;
@@ -70,7 +64,7 @@ public class ChatBot
         {
             if (task.IsFaulted)
             {
-                logger?.LogError(task.Exception, "Ошибка при выполнении делегате {trigger}", command.trigger);
+                logger?.LogError(task.Exception, "Ошибка при выполнении делегата {trigger}", command.trigger);
             }
         });
     }
